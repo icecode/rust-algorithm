@@ -7,6 +7,8 @@ use ferris_says;
 use std::cmp::{Ordering};
 
 mod bin_tree;
+mod linked_list;
+mod array_list;
 
 const PI: f64 = 3.14159265359;
 
@@ -18,7 +20,7 @@ fn main() {
     var_ownership_copy();
     print_raw_args(1, 2, PI);
     println!("π values is {}", PI);
-    let mut lst: ArrayList<NodeCopy> = ArrayList::new();
+    let mut lst: array_list::ArrayList<NodeCopy> = array_list::ArrayList::new();
     let n1 = NodeCopy { data: 1 };
     let n2 = n1.clone();
     let n3 = n2;
@@ -30,7 +32,7 @@ fn main() {
     lst.add_to_index(0, NodeCopy { data: 0 });
 
 
-    let mut l2: LinkedList<NodeCopy> = LinkedList::new();
+    let mut l2: linked_list::LinkedList<NodeCopy> = linked_list::LinkedList::new();
     l2.push_front(NodeCopy { data: 1 });
     l2.push_front(NodeCopy { data: 2 });
     l2.push_front(NodeCopy { data: 3 });
@@ -72,131 +74,10 @@ fn main() {
 }
 
 
-
-struct LinkedList<T: Copy> {
-    head: Option<Box<LinkedNode<T>>>
-}
-
-
-impl<T: Copy> LinkedList<T> {
-    fn new() -> LinkedList<T> {
-        LinkedList {
-            head: Option::None,
-        }
-    }
-
-    fn push_back(&mut self, elm: T) {
-        let mut tail = &mut self.head;
-        while tail.is_some() {
-            tail = &mut tail.as_mut().unwrap().as_mut().next;
-        }
-        *tail = Option::Some(Box::new(LinkedNode { data: elm, next: None }))
-    }
-
-    fn push_front(&mut self, elm: T) {
-        match self.head.take() {
-            None => self.head = {
-                Option::Some(Box::new(LinkedNode { data: elm, next: None }))
-            },
-            Some(box_val) => {
-                self.head = Option::Some(Box::new(LinkedNode { data: elm, next: Option::from(box_val) }))
-            }
-        }
-    }
-
-    fn foreach(&mut self, apply: fn(e: &T)) {
-        let mut node = &mut self.head;
-        while node.is_some() {
-            apply(&node.as_mut().unwrap().as_mut().data);
-            node = &mut node.as_mut().unwrap().next;
-        }
-    }
-
-    fn pop_front(&mut self) -> Option<T> {
-        return if self.head.is_none() {
-            None
-        } else {
-            let v = self.head.take().unwrap();
-            self.head = v.next;
-            Some(v.data)
-        }
-    }
-
-
-    fn pop_back(&mut self) -> Option<T> {
-        let mut tail = &mut self.head;
-        while tail.is_some() && tail.as_mut().unwrap().next.is_some() {
-            tail = &mut tail.as_mut().unwrap().next;
-        }
-        return if tail.is_some() {
-            let data = match tail {
-                Some(box_node) => Some(box_node.data),
-                None => None
-            };
-            *tail = None;
-            data
-        } else {
-            None
-        }
-    }
-}
-
 struct LinkedNode<T> {
     data: T,
     next: Option<Box<LinkedNode<T>>>,
 }
-
-struct ArrayList<T: Copy> {
-    elms: Vec<T>,
-}
-
-impl<T: Copy> ArrayList<T> {
-    fn new() -> ArrayList<T> {
-        ArrayList {
-            elms: Vec::with_capacity(2)
-        }
-    }
-
-    fn foreach(&self, apply: fn(e: &T)) {
-        for i in 0..self.elms.len() {
-            let el = &self.elms[i];
-            apply(el)
-        }
-    }
-
-    fn push(&mut self, elm: T) -> bool {
-        self.try_grow();
-        self.elms.push(elm);
-        true
-    }
-
-    fn add_to_index(&mut self, index: usize, elm: T) -> bool {
-        if self.elms.len() < index {
-            return false;
-        }
-        self.try_grow();
-        self.elms.insert(index, elm);
-        self.elms[index] = elm;
-        return true;
-    }
-
-    fn remove_to_index(&mut self, index: usize) -> T {
-        self.elms.remove(index)
-    }
-
-    fn pop(&mut self) -> Option<T> {
-        self.elms.pop()
-    }
-
-    fn try_grow(&mut self) {
-        if (self.elms.len() + 1) >= self.elms.capacity() {
-            print!("Trigger reserve: {}, ", self.elms.capacity());
-            self.elms.reserve(self.elms.capacity());
-            println!("{}", self.elms.capacity());
-        }
-    }
-}
-
 
 fn fn_option_args_move<T: Debug>(v: Option<T>) {
     match v {
